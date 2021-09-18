@@ -7,7 +7,7 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: I5uSS1kn08
+      POSTGRES_PASSWORD: kA4riUyt6
     ports:
       - 5432:5432
     env_file:
