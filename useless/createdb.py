@@ -11,6 +11,7 @@ async def create_db():
             # -----
             try:
                 cur.execute("CREATE TABLE forms18 (index serial primary key,"
+                            "nick varchar default 0,"
                             "message varchar default 0,"
                             "photo_id varchar default 0);")
             except:
@@ -30,6 +31,7 @@ async def create_db():
                             "user_name varchar default 0,"
                             "reg_date varchar default 0,"
                             "status varchar default 0,"
+                            "status18 varchar default 0,"
                             "help varchar default 0);")
             except:
                 pass
@@ -37,11 +39,11 @@ async def create_db():
             try:
                 cur.execute("CREATE TABLE admin (user_id varchar primary key,"
                             "user_name varchar default 0,"
-                            "table varchar default 0,"
-                            "help varchar default 0"
+                            "table_name varchar default 0,"
+                            "help varchar default 0,"
+                            "count18 integer default 0,"
                             "count integer default 0);")
             except:
                 pass
-            # -----
 
     conn.close()

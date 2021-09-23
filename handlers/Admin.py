@@ -16,6 +16,19 @@ from states.statates import StateMachine
 from kyeboards.marks import AdminMenu
 
 
+@dp.message_handler(content_types=["photo"], state=StateMachine.EnterPhoto)
+async def send_photo(message: Message):
+    table = str(await select_db("admin", "user_id", "table_name", admin_id))
+
+    photo_id = str(message.photo[-1].file_id)
+    await insert_db(table, "photo_id", photo_id)
+    await update_db("admin", "user_id", "help", admin_id, photo_id)
+
+    await message.answer("Отправьте Ник:")
+
+    await StateMachine.EnterNick.set()
+
+
 @dp.message_handler(state=StateMachine.Admin)
 async def mess(message: Message):
 
@@ -27,26 +40,13 @@ async def mess(message: Message):
 
     if message.text == "Загрузить 18🔥":
         await message.answer("Отправьте фотографию:", reply_markup=ReplyKeyboardRemove())
-        await update_db("admin", "user_id", "table", admin_id, "forms18")
+        await update_db("admin", "user_id", "table_name", admin_id, "forms18")
         await StateMachine.EnterPhoto.set()
 
     if message.text == "Загрузить😊":
         await message.answer("Отправьте фотографию:", reply_markup=ReplyKeyboardRemove())
-        await update_db("admin", "user_id", "table", admin_id, "forms")
+        await update_db("admin", "user_id", "table_name", admin_id, "forms")
         await StateMachine.EnterPhoto.set()
-
-
-@dp.message_handler(content_types=["photo"], state=StateMachine.EnterPhoto)
-async def send_photo(message: Message):
-    table = str(await select_db("admin", "user_id", "table", admin_id))
-
-    photo_id = str(message.photo[-1].file_id)
-    await insert_db(table, "photo_id", photo_id)
-    await update_db("admin", "user_id", "help", admin_id, photo_id)
-
-    await message.answer("Отправьте Ник:")
-
-    await StateMachine.EnterNick.set()
 
 
 @dp.message_handler(state=StateMachine.EnterNick)
@@ -59,7 +59,7 @@ async def mess(message: Message):
     # -----
 
     else:
-        table = str(await select_db("admin", "user_id", "table", admin_id))
+        table = str(await select_db("admin", "user_id", "table_name", admin_id))
 
         nick = message.text
         photo_id = str(await select_db("admin", "user_id", "help", admin_id))
@@ -80,15 +80,20 @@ async def mess(message: Message):
     # -----
 
     else:
-        table = str(await select_db("admin", "user_id", "table", admin_id))
+        table = str(await select_db("admin", "user_id", "table_name", admin_id))
 
         mess = message.text
         photo_id = str(await select_db("admin", "user_id", "help", admin_id))
         await update_db(table, "photo_id", "message", photo_id, mess)
 
         await message.answer("Форма сохранена⚡", reply_markup=AdminMenu)
-        count = int(await select_db("admin", "user_id", "count", admin_id))
-        count += 1
-        await update_db("admin", "user_id", "count", admin_id, count)
+        if table == "forms":
+            count = int(await select_db("admin", "user_id", "count", admin_id))
+            count += 1
+            await update_db("admin", "user_id", "count", admin_id, count)
+        else:
+            count = int(await select_db("admin", "user_id", "count18", admin_id))
+            count += 1
+            await update_db("admin", "user_id", "count18", admin_id, count)
 
         await StateMachine.Admin.set()

@@ -40,6 +40,8 @@ async def mess(message: Message):
             await insert_db("users", "user_id", user_id)
         except:
             pass
+        await update_db("users", "user_id", "status", user_id, 1)
+        await update_db("users", "user_id", "status18", user_id, 1)
         await update_db("users", "user_id", "user_name", user_id, user_name)
         await update_db("users", "user_id", "reg_date", user_id, now)
 
@@ -51,7 +53,6 @@ async def mess(message: Message):
 @dp.message_handler()
 async def mess(message: Message):
     user_id = str(message.from_user.id)
-    user_name = str(message.from_user.username)
 
     if user_id == admin_id:
         check = True
@@ -81,8 +82,8 @@ async def mess(message: Message):
 @dp.message_handler(state=StateMachine.Start)
 async def mess(message: Message):
     user_id = str(message.from_user.id)
-    user_name = str(message.from_user.username)
     mx = int(await select_db("admin", "user_id", "count", admin_id))
+    mx18 = int(await select_db("admin", "user_id", "count18", admin_id))
 
     # ----- start
     if message.text == "/start":
@@ -92,18 +93,20 @@ async def mess(message: Message):
     # -----
 
     if message.text == "Горячие знакомства(18+)🔥":
-        status = int(await select_db("users", "user_id", "status", user_id))
+        status18 = int(await select_db("users", "user_id", "status18", user_id))
+
         await update_db("users", "user_id", "help", user_id, "forms18")
-        if status < mx:
-            photo_id = str(await select_db("forms18", "index", "photo_id", status))
-            text = str(await select_db("forms18", "index", "message", status))
-            nick = str(await select_db("forms18", "index", "nick", status))
+
+        if status18 <= mx18:
+            photo_id = str(await select_db("forms18", "index", "photo_id", status18))
+            text = str(await select_db("forms18", "index", "message", status18))
+            nick = str(await select_db("forms18", "index", "nick", status18))
 
             await dp.bot.send_photo(user_id, photo_id, caption=text, reply_markup=InlineForm18)
             await message.answer(f"Имя на сайте: {nick}", reply_markup=NextMenu)
 
-            status += 1
-            await update_db("users", "user_id", "status", user_id, status)
+            status18 += 1
+            await update_db("users", "user_id", "status18", user_id, status18)
 
             await StateMachine.Next.set()
         else:
@@ -111,8 +114,10 @@ async def mess(message: Message):
 
     if message.text == "Обычные знакомства😊":
         status = int(await select_db("users", "user_id", "status", user_id))
+
         await update_db("users", "user_id", "help", user_id, "forms")
-        if status < mx:
+
+        if status <= mx:
             photo_id = str(await select_db("forms", "index", "photo_id", status))
             text = str(await select_db("forms", "index", "message", status))
             nick = str(await select_db("forms", "index", "nick", status))
@@ -131,8 +136,8 @@ async def mess(message: Message):
 @dp.message_handler(state=StateMachine.Next)
 async def mess(message: Message):
     user_id = str(message.from_user.id)
-    user_name = str(message.from_user.username)
     mx = int(await select_db("admin", "user_id", "count", admin_id))
+    mx18 = int(await select_db("admin", "user_id", "count18", admin_id))
 
     # ----- start
     if message.text == "/start":
@@ -144,21 +149,33 @@ async def mess(message: Message):
     if message.text == "Следующая💋":
         table = str(await select_db("users", "user_id", "help", user_id))
         status = int(await select_db("users", "user_id", "status", user_id))
-        if status < mx:
-            photo_id = str(await select_db(table, "index", "photo_id", status))
-            text = str(await select_db(table, "index", "message", status))
-            nick = str(await select_db(table, "index", "nick", status))
+        status18 = int(await select_db("users", "user_id", "status18", user_id))
 
-            if table == "forms":
+        if table == "forms":
+            if status <= mx:
+                photo_id = str(await select_db(table, "index", "photo_id", status))
+                text = str(await select_db(table, "index", "message", status))
+                nick = str(await select_db(table, "index", "nick", status))
+
                 await dp.bot.send_photo(user_id, photo_id, caption=text, reply_markup=InlineForm)
+                await message.answer(f"Имя на сайте: {nick}", reply_markup=NextMenu)
+                status += 1
+                await update_db("users", "user_id", "status", user_id, status)
             else:
-                await dp.bot.send_photo(user_id, photo_id, caption=text, reply_markup=InlineForm18)
-            await message.answer(f"Имя на сайте: {nick}", reply_markup=NextMenu)
-
-            status += 1
-            await update_db("users", "user_id", "status", user_id, status)
+                await message.answer("Доступные анкеты закончились")
         else:
-            await message.answer("Доступные анкеты закончились")
+            if status18 <= mx18:
+                photo_id = str(await select_db(table, "index", "photo_id", status18))
+                text = str(await select_db(table, "index", "message", status18))
+                nick = str(await select_db(table, "index", "nick", status18))
+
+                await dp.bot.send_photo(user_id, photo_id, caption=text, reply_markup=InlineForm18)
+                await message.answer(f"Имя на сайте: {nick}", reply_markup=NextMenu)
+
+                status18 += 1
+                await update_db("users", "user_id", "status18", user_id, status18)
+            else:
+                await message.answer("Доступные анкеты закончились")
 
     if message.text == "Сменить режим⬅":
         await message.answer("Выбери режим:", reply_markup=StartMenu)
